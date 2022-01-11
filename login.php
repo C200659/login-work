@@ -3,48 +3,49 @@ session_start();
 require('functions.php');
 
 if ($_COOKIE['email'] != '') {
-$_POST['email'] = $_COOKIE['email'];
-$_POST['password'] = $_COOKIE['password'];
-$_POST['save'] = 'on';
+	$_POST['email'] = $_COOKIE['email'];
+	$_POST['password'] = $_COOKIE['password'];
+	$_POST['save'] = 'on';
 }
 
 if (!empty($_POST)) {
 	// ログインの処理
 	if ($_POST['email'] != '' && $_POST['password'] != '') {
-        $email = htmlspecialchars($_POST['email'], ENT_QUOTES, 'UTF-8');
-        $password = htmlspecialchars($_POST['password'], ENT_QUOTES, 'UTF-8');
-        $dbh = db_conn();
-        try{
-            $sql = 'SELECT * FROM members WHERE email=:email';
-            $stmt = $dbh->prepare($sql);
-            $stmt->bindValue(':email', $email, PDO::PARAM_STR);
-            $stmt->execute();
+		$email = htmlspecialchars($_POST['email'], ENT_QUOTES, 'UTF-8');
+		$password = htmlspecialchars($_POST['password'], ENT_QUOTES, 'UTF-8');
+		$dbh = db_conn();
+		try {
+			$sql = 'SELECT * FROM members WHERE email=:email';
+			$stmt = $dbh->prepare($sql);
+			$stmt->bindValue(':email', $email, PDO::PARAM_STR);
+			$stmt->execute();
 			$member = $stmt->fetch(PDO::FETCH_ASSOC);
-//  ここにパスワードのチェック処理を完成させる
-//  		if( xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ) {
+			//  ここにパスワードのチェック処理を完成させる
+			//  		if( xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ) {
+			if (password_verify($password, $member['password'])) {
 				// ログイン成功
 
-//  ここにセッションハイジャック対策を追加
-//
+				//  ここにセッションハイジャック対策を追加
+				//
 
 				$_SESSION['id'] = $member['id'];
 				$_SESSION['time'] = time();
 
 				// ログイン情報を記録する
 				if ($_POST['save'] == 'on') {
-				    setcookie('email', $_POST['email'], time()+60*60*24*14);
-				    setcookie('password', $_POST['password'], time()+60*60*24*14);
+					setcookie('email', $_POST['email'], time() + 60 * 60 * 24 * 14);
+					setcookie('password', $_POST['password'], time() + 60 * 60 * 24 * 14);
 				}
 				header('Location: index2.php');
 				exit();
-            }else{
+			} else {
 				// ログイン認証失敗
 				$error['login'] = 'failed';
-            } 
-        }catch (PDOException $e){
-            echo($e->getMessage());
-            die();
-        }
+			}
+		} catch (PDOException $e) {
+			echo ($e->getMessage());
+			die();
+		}
 	} else {
 		$error['login'] = 'blank';
 	}
@@ -52,6 +53,7 @@ if (!empty($_POST)) {
 ?>
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -76,11 +78,11 @@ if (!empty($_POST)) {
 				<dl>
 					<dt>メールアドレス</dt>
 					<dd>
-						<input type="text" name="email" size="35" maxlength="255" value="<?php echo htmlspecialchars($_POST['email'], ENT_QUOTES); ?>"/>
-						<?php if ($error['login'] == 'blank'): ?>
+						<input type="text" name="email" size="35" maxlength="255" value="<?php echo htmlspecialchars($_POST['email'], ENT_QUOTES); ?>" />
+						<?php if ($error['login'] == 'blank') : ?>
 							<p class="error">* メールアドレスとパスワードをご記入ください</p>
 						<?php endif; ?>
-						<?php if ($error['login'] == 'failed'): ?>
+						<?php if ($error['login'] == 'failed') : ?>
 							<p class="error">* ユーザーIDあるいはパスワードに誤りがあります。正しく入力ください。</p>
 						<?php endif; ?>
 					</dd>
@@ -95,4 +97,5 @@ if (!empty($_POST)) {
 
 	</div>
 </body>
+
 </html>
